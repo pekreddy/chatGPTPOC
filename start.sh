@@ -5,7 +5,7 @@ echo "Restoring frontend npm packages"
 echo ""
 cd frontend
 echo "Installing npm"
-apt-get install npm
+apt-get install nodejs npm
 echo "Installing npm packages"
 npm install
 if [ $? -ne 0 ]; then
