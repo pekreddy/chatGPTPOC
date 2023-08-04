@@ -4,17 +4,8 @@ echo ""
 echo "Restoring frontend npm packages"
 echo ""
 cd frontend
-
-echo "Installing node"
-apt-get install nodejs -y
-echo "Installing node completed"
-echo "Node version."
-apt-get node -v
 echo "Installing npm"
-apt-get install npm -y
-echo "Installing npm completed"
-echo "Npm version."
-apt-get npm -v
+apt-get install nodejs npm
 
 echo "Installing npm packages"
 npm install
