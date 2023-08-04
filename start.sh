@@ -4,6 +4,9 @@ echo ""
 echo "Restoring frontend npm packages"
 echo ""
 cd frontend
+echo "Installing npm"
+apt-get install npm
+echo "Installing npm packages"
 npm install
 if [ $? -ne 0 ]; then
     echo "Failed to restore frontend npm packages"
