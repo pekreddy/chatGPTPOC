@@ -190,6 +190,28 @@ def stream_without_data(response):
         }
         yield json.dumps(response_obj).replace("\n", "\\n") + "\n"
 
+def summarize_data(request):
+    response = openai.ChatCompletion.create(
+        engine=AZURE_OPENAI_MODEL,
+        messages = request,
+        temperature=float(AZURE_OPENAI_TEMPERATURE),
+        max_tokens=int(AZURE_OPENAI_MAX_TOKENS),
+        top_p=float(AZURE_OPENAI_TOP_P),
+        stop= None
+    )
+    response_obj = {
+            "id": response.id,
+            "object": response.object,
+            "created": response.created,
+            "model": response.model,
+            "choices": [{
+                "messages": [{
+                    "role": "assistant",
+                    "content": response.choices[0].text
+                }]
+            }]
+        }
+    return jsonify(response_obj), 200
 
 def conversation_without_data(request):
     openai.api_type = "azure"
@@ -256,3 +278,11 @@ def conversation():
 
 if __name__ == "__main__":
     app.run()
+
+@app.route("/summarize", methods=["GET", "POST"])
+def summarize():
+    try:
+        summarize_data(request)
+    except Exception as e:
+        logging.exception("Exception in /conversation")
+        return jsonify({"error": str(e)}), 500
