@@ -1,5 +1,7 @@
 import json
 import os
+from azure.core.credentials import AzureKeyCredential
+from azure.ai.textanalytics import TextAnalyticsClient
 import logging
 import requests
 import openai
@@ -295,7 +297,7 @@ def sample_abstractive_summarization():
     from azure.ai.textanalytics import TextAnalyticsClient
 
     endpoint = os.environ["AZURE_LANGUAGE_ENDPOINT"]
-    key = os.environ["AZURE_LANGUAGE_KEY"]''
+    key = os.environ["AZURE_LANGUAGE_KEY"]
     print("request",request.data.decode("utf-8"))
     text_analytics_client = TextAnalyticsClient(
         endpoint=endpoint,
