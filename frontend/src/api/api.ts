@@ -38,6 +38,7 @@ export async function langSummaryApi(text: string): Promise<Response> {
     });
 
     if (!response.ok) {
+        console.log("Entering error")
         const errorMessage = `Server error: ${response.statusText}`;
         console.error(errorMessage);
         throw new Error(errorMessage);
