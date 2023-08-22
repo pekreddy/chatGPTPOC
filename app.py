@@ -1,5 +1,7 @@
 import json
 import os
+from azure.core.credentials import AzureKeyCredential
+from azure.ai.textanalytics import TextAnalyticsClient
 import logging
 import requests
 import openai
@@ -290,10 +292,6 @@ def summarize():
 def sample_abstractive_summarization():
    try:
     # [START abstractive_summary]
-    import os
-    from azure.core.credentials import AzureKeyCredential
-    from azure.ai.textanalytics import TextAnalyticsClient
-
     endpoint = 'https://pockxdocsummarization.cognitiveservices.azure.com/' #os.environ["AZURE_LANGUAGE_ENDPOINT"]
     key = '99dcf13c2c704134836d2b68d53ae452' #os.environ["AZURE_LANGUAGE_KEY"]''
     print("request",request.data)
