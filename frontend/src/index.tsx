@@ -19,6 +19,10 @@ export default function App() {
                     <Route index element={<Chat />} />
                     <Route path="*" element={<NoPage />} />
                 </Route>
+                <Route path="/elastic" element={<Layout />}>
+                    <Route index element={<Chat />} />
+                    <Route path="*" element={<NoPage />} />
+                </Route>
             </Routes>
         </HashRouter>
     );
