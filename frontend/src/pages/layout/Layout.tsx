@@ -42,7 +42,10 @@ const Layout = () => {
                             aria-hidden="true"
                         />
                         <Link to="/" className={styles.headerTitleContainer}>
-                            <h1 className={styles.headerTitle}>KX GenAI</h1>
+                            <h1 className={styles.headerTitle}>KX GenAI Cognitive</h1>
+                        </Link>
+                        <Link to="/elastic" className={styles.headerTitleContainer}>
+                            <h1 className={styles.headerTitle}>KX GenAI Elastic</h1>
                         </Link>
                     </Stack>
                 </div>
