@@ -286,7 +286,7 @@ def summarize():
         return jsonify({"error": str(e)}), 500  
 
 
-@app.route("/langsummarize", methods=["POST"])
+@app.route("/langsummarize", methods=["GET","POST"])
 def sample_abstractive_summarization():
     # [START abstractive_summary]
     import os
