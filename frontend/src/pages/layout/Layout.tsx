@@ -3,12 +3,34 @@ import styles from "./Layout.module.css";
 import Azure from "../../assets/NewLogo.png";
 import { CopyRegular, ShareRegular } from "@fluentui/react-icons";
 import { Dialog, Stack, TextField } from "@fluentui/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { ContextualMenu, ContextualMenuItemType, IContextualMenuItem } from '@fluentui/react/lib/ContextualMenu';
+import  Chat from "../chat/Chat";
+import Summary from "../summary/Summary";
 
 const Layout = () => {
     const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false);
     const [copyClicked, setCopyClicked] = useState<boolean>(false);
     const [copyText, setCopyText] = useState<string>("Copy URL");
+    const [showContextualMenu, setShowContextualMenu] = useState(false);
+    const linkRef = useRef(null);
+    const [selectedTab, setSelectedTab] = useState("Chat");
+    const menuItems: IContextualMenuItem[] = [
+        {
+          key: 'ChatBot',
+          text: 'ChatBot',
+          onClick: () => setSelectedTab("Chat")
+        },
+        {
+            key: 'Summary',
+            text: 'Summary',
+            onClick: () => setSelectedTab("Summary")
+        }
+      ];
+
+    const onShowContextualMenu = () => {
+        setShowContextualMenu(!showContextualMenu)
+    }
 
     const handleShareClick = () => {
         setIsSharePanelOpen(true);
@@ -32,61 +54,41 @@ const Layout = () => {
     }, [copyClicked]);
 
     return (
-        <div className={styles.layout}>
-            <header className={styles.header} role={"banner"}>
-                <div className={styles.headerContainer}>
-                    <Stack horizontal verticalAlign="center">
-                        <img
-                            src={Azure}
-                            className={styles.headerIcon}
-                            aria-hidden="true"
-                        />
-                        <Link to="/" className={styles.headerTitleContainer}>
-                            <h1 className={styles.headerTitle}>KX GenAI</h1>
-                        </Link>
-                    </Stack>
-                </div>
-            </header>
-            <Outlet />
-            <Dialog 
-                onDismiss={handleSharePanelDismiss}
-                hidden={!isSharePanelOpen}
-                styles={{
-                    
-                    main: [{
-                        selectors: {
-                          ['@media (min-width: 480px)']: {
-                            maxWidth: '600px',
-                            background: "#FFFFFF",
-                            boxShadow: "0px 14px 28.8px rgba(0, 0, 0, 0.24), 0px 0px 8px rgba(0, 0, 0, 0.2)",
-                            borderRadius: "8px",
-                            maxHeight: '200px',
-                            minHeight: '100px',
-                          }
-                        }
-                      }]
-                }}
-                dialogContentProps={{
-                    title: "Share the web app",
-                    showCloseButton: true
-                }}
-            >
-                <Stack horizontal verticalAlign="center" style={{gap: "8px"}}>
-                    <TextField className={styles.urlTextBox} defaultValue={window.location.href} readOnly/>
-                    <div 
-                        className={styles.copyButtonContainer} 
-                        role="button" 
-                        tabIndex={0} 
-                        aria-label="Copy" 
-                        onClick={handleCopyClick}
-                        onKeyDown={e => e.key === "Enter" || e.key === " " ? handleCopyClick() : null}
-                    >
-                        <CopyRegular className={styles.copyButton} />
-                        <span className={styles.copyButtonText}>{copyText}</span>
-                    </div>
-                </Stack>
-            </Dialog>
-        </div>
+      <div className={styles.layout}>
+        <header className={styles.header} role={"banner"}>
+          <div className={styles.headerContainer}>
+            <Stack horizontal verticalAlign="center">
+              <img
+                src={Azure}
+                className={styles.headerIcon}
+                aria-hidden="true"
+              />
+              <Link to="/" className={styles.headerTitleContainer}>
+                <h1 className={styles.headerTitle}>KX GenAI</h1>
+              </Link>
+              <div className={styles.shareButtonContainer}>
+                <p>
+                  <b>
+                    <a ref={linkRef} onClick={onShowContextualMenu} href="#">
+                      DashBoard
+                    </a>
+                  </b>
+                </p>
+              </div>
+              <ContextualMenu
+                items={menuItems}
+                hidden={!showContextualMenu}
+                target={linkRef}
+                onItemClick={()=>{setShowContextualMenu(false)}}
+                onDismiss={()=>{setShowContextualMenu(false)}}
+              />
+            </Stack>
+          </div>
+        </header>
+        {/* <Outlet /> */}
+        
+        {selectedTab == "Chat" ? <Chat/>:<Summary/>}
+      </div>
     );
 };
 

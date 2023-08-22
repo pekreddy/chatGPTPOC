@@ -1,7 +1,7 @@
-import { UserInfo, ConversationRequest } from "./models";
+import { UserInfo, ConversationRequest, SummaryRequest} from "./models";
 
 export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
-    const response = await fetch("/conversation", {
+    const response = await fetch("/conversation1", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -11,6 +11,37 @@ export async function conversationApi(options: ConversationRequest, abortSignal:
         }),
         signal: abortSignal
     });
+
+    return response;
+}
+
+export async function summaryApi(text: string): Promise<Response> {
+    const response = await fetch("/summarize", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: text,
+    });
+
+    return response;
+}
+
+export async function langSummaryApi(text: string): Promise<Response> {
+    console.log("text",text)
+    const response = await fetch("/langsummarize", {
+        method: "POST",
+        headers: {
+            "Content-Type": "text/plain"
+        },
+        body: text,
+    });
+
+    if (!response.ok) {
+        const errorMessage = `Server error: ${response.statusText}`;
+        console.error(errorMessage);
+        throw new Error(errorMessage);
+    }
 
     return response;
 }

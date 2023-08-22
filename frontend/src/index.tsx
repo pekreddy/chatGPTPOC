@@ -8,7 +8,7 @@ import "./index.css";
 import Layout from "./pages/layout/Layout";
 import NoPage from "./pages/NoPage";
 import Chat from "./pages/chat/Chat";
-
+import Summary from "./pages/summary/Summary";
 initializeIcons();
 
 export default function App() {
@@ -16,7 +16,7 @@ export default function App() {
         <HashRouter>
             <Routes>
                 <Route path="/" element={<Layout />}>
-                    <Route index element={<Chat />} />
+                    {/* <Route index element={<Chat />} /> */}
                     <Route path="*" element={<NoPage />} />
                 </Route>
             </Routes>

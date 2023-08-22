@@ -48,6 +48,10 @@ export type ConversationRequest = {
     messages: ChatMessage[];
 };
 
+export type SummaryRequest = {
+    prompt: string;
+};
+
 export type UserInfo = {
     access_token: string;
     expires_on: string;
