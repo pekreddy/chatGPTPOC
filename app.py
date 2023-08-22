@@ -288,6 +288,7 @@ def summarize():
 
 @app.route("/langsummarize", methods=["GET","POST"])
 def sample_abstractive_summarization():
+   try:
     # [START abstractive_summary]
     import os
     from azure.core.credentials import AzureKeyCredential
@@ -339,6 +340,9 @@ def sample_abstractive_summarization():
                 result.error.code, result.error.message
             ))
     return abstract
+   except Exception as e:
+        logging.exception("Exception in /langsummarize")
+        return jsonify({"error": str(e)}), 500  
     # [END abstractive_summary]
 
 
