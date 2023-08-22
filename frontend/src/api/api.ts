@@ -27,23 +27,17 @@ export async function summaryApi(text: string): Promise<Response> {
     return response;
 }
 
-export async function langSummaryApi(text: string): Promise<Response> {
+export async function langSummaryApi(text: string):Promise<Response> {
     console.log("text",text)
-    const response = await fetch("/langsummarize", {
-        method: "POST",
-        headers: {
-            "Content-Type": "text/plain"
-        },
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "text/plain");
+    const response :any = await fetch("/langsummarize", {
+        method: 'POST',
+        headers: myHeaders,
         body: text,
-    });
-
-    if (!response.ok) {
-        const errorMessage = `Server error: ${response.statusText}`;
-        console.error(errorMessage);
-        throw new Error(errorMessage);
-    }
-
-    return response;
+        redirect: 'follow'
+      })
+        return response;
 }
 
 export async function getUserInfo(): Promise<UserInfo[]> {
