@@ -7,7 +7,7 @@ import { summaryApi,langSummaryApi } from "../../api";
 const Summary = () => {
     const [content, setContent] = useState<string>("");
     const [langContent, setLangContent] = useState<string>("");
-    const [langContentSummary, setLangContentSummary] = useState<string>("");
+    const [langContentSummary, setLangContentSummary] = useState<string>("No Summary to display.");
     const onSummaryChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
         setContent(newValue || "");
     };
@@ -29,6 +29,7 @@ const Summary = () => {
       //setLangContent(data);
       if(langContent && langContent != '')
       {
+        setLangContentSummary("Generating Summary...")
       const response = await langSummaryApi(langContent);
       const processedText = await response.text()
        console.log("response", response);
@@ -66,7 +67,7 @@ const Summary = () => {
         </Stack> */}
 
         <Stack className={styles.questionInputContainer}>
-          <div className={styles.title}>Language Studio AI Api</div>
+          <div className={styles.titlemain}>Language Studio AI Api</div>
           <div className={styles.textform}>
           <TextField
             className={styles.questionInputTextArea}
@@ -93,7 +94,7 @@ const Summary = () => {
           </div>
         
         </Stack>
-        <div className={styles.title}>Summary: {langContentSummary != ''?langContentSummary:'No summary yet..'}</div>
+        <div className={styles.title}><b>Summary:</b> {langContentSummary != ''?langContentSummary:'No summary yet..'}</div>
         </Stack>
       </div>
     );
