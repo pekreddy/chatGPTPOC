@@ -53,6 +53,10 @@ AZURE_OPENAI_PREVIEW_API_VERSION =os.environ.get("AZURE_OPENAI_PREVIEW_API_VERSI
 AZURE_OPENAI_STREAM =os.environ.get("AZURE_OPENAI_STREAM", "true")
 AZURE_OPENAI_MODEL_NAME =os.environ.get("AZURE_OPENAI_MODEL_NAME", "gpt-35-turbo") # Name of the model, e.g. 'gpt-35-turbo' or 'gpt-4'
 
+#ALS Integration Settings
+AZURE_LANGUAGE_ENDPOINT = os.environ.get("AZURE_LANGUAGE_ENDPOINT")
+AZURE_LANGUAGE_KEY = os.environ.get("AZURE_LANGUAGE_KEY")
+
 SHOULD_STREAM = True if AZURE_OPENAI_STREAM.lower() == "true" else False
 
 def is_chat_model():
@@ -302,8 +306,8 @@ def sample_abstractive_summarization():
     from azure.core.credentials import AzureKeyCredential
     from azure.ai.textanalytics import TextAnalyticsClient
 
-    endpoint = os.environ.get["AZURE_LANGUAGE_ENDPOINT"]
-    key = os.environ.get["AZURE_LANGUAGE_KEY"]
+    endpoint = AZURE_LANGUAGE_ENDPOINT
+    key = AZURE_LANGUAGE_KEY
     print("request",request.data.decode("utf-8"))
     text_analytics_client = TextAnalyticsClient(
         endpoint=endpoint,
