@@ -194,6 +194,10 @@ def stream_without_data(response):
         yield json.dumps(response_obj).replace("\n", "\\n") + "\n"
 
 def summarize_data(request):
+    openai.api_type = "azure"
+    openai.api_base = "https://qakxazopenai.openai.azure.com/"
+    openai.api_version = "2022-12-01"
+    openai.api_key = "ff829476f88246c1accdad3826cc3fea"
     response = openai.ChatCompletion.create(
         engine=AZURE_OPENAI_MODEL,
         messages = request,
@@ -279,10 +283,12 @@ def conversation():
         logging.exception("Exception in /conversation1")
         return jsonify({"error": str(e)}), 500
 
-@app.route("/summarize", methods=["GET", "POST"])
+@app.route("/summarize", methods=["POST"])
 def summarize():
     try:
-        summarize_data(request)
+        print ("inside summari api")
+        print(request.json)
+        summarize_data(request.json)
     except Exception as e:
         logging.exception("Exception in /conversation1")
         return jsonify({"error": str(e)}), 500  
