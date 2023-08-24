@@ -1,7 +1,7 @@
-import { UserInfo, ConversationRequest } from "./models";
+import { UserInfo, ConversationRequest, SummaryRequest} from "./models";
 
 export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
-    const response = await fetch("/conversation", {
+    const response = await fetch("/conversation1", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -13,6 +13,32 @@ export async function conversationApi(options: ConversationRequest, abortSignal:
     });
 
     return response;
+}
+
+export async function summaryApi(text: any): Promise<Response> {
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    const response = await fetch("/summarize", {
+        method: 'POST',
+        headers: myHeaders,
+        body: JSON.stringify(text),
+        redirect: 'follow'
+      });
+
+    return response;
+}
+
+export async function langSummaryApi(text: string):Promise<Response> {
+    console.log("text",text)
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "text/plain");
+    const response :any = await fetch("/langsummarize", {
+        method: 'POST',
+        headers: myHeaders,
+        body: text,
+        redirect: 'follow'
+      })
+        return response;
 }
 
 export async function getUserInfo(): Promise<UserInfo[]> {

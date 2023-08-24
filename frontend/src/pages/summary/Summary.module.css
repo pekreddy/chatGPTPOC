@@ -1,0 +1,72 @@
+
+
+.textform {
+    height: 200px;
+    margin: 0px auto;
+    width: 95%;
+    position: relative;
+    background: #FFFFFF;
+    box-shadow: 0 8px 16px #00000024, 0 0 2px #0000001f;
+    border-radius: 8px;
+}
+.title{
+    width: 95%;
+    margin: 20px auto;
+}
+
+.titlemain{
+    width: 95%;
+    margin: 20px auto;
+    text-align: center;
+    font-style: normal;
+    font-weight: 700;
+    font-size: 24px;
+}
+.questionInputTextArea {
+    width: 100%;
+}
+
+.questionInputSendButtonContainer {
+    position: absolute;
+    right: 24px;
+    bottom: 20px;
+}
+
+.questionInputSendButton {
+    width: 24px;
+    height: 23px;
+    position: absolute;
+    top: -20px;
+    left: -10px;
+}
+
+.questionInputSendButtonDisabled {
+    /* opacity: 0.4; */
+    width: 24px;
+    height: 23px;
+    background: none;
+    color: #424242;
+}
+
+
+
+.questionInputOptionsButton {
+    cursor: pointer;
+    width: 27px;
+    height: 30px;
+}
+textarea{
+    background: transparent!important;
+    height: 160px!important;
+}
+
+.questionInputBottomBorder {
+    position: absolute;
+    width: 100%;
+    height: 4px;
+    left: 0%;
+    bottom: 0%;
+    background: radial-gradient(106.04% 106.06% at 100.1% 90.19%,#0fbd32 33.63%,#f6f9f9 100%);
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
