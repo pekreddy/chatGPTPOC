@@ -15,14 +15,15 @@ export async function conversationApi(options: ConversationRequest, abortSignal:
     return response;
 }
 
-export async function summaryApi(text: string): Promise<Response> {
+export async function summaryApi(text: any): Promise<Response> {
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
     const response = await fetch("/summarize", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: text,
-    });
+        method: 'POST',
+        headers: myHeaders,
+        body: JSON.stringify(text),
+        redirect: 'follow'
+      });
 
     return response;
 }

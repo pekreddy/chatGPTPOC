@@ -7,6 +7,7 @@ import { useEffect, useState, useRef } from "react";
 import { ContextualMenu, ContextualMenuItemType, IContextualMenuItem } from '@fluentui/react/lib/ContextualMenu';
 import  Chat from "../chat/Chat";
 import Summary from "../summary/Summary";
+import GenAISummary from "../genaisummary/GenAISummary";
 
 const Layout = () => {
     const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false);
@@ -25,6 +26,11 @@ const Layout = () => {
             key: 'Summary',
             text: 'Summary',
             onClick: () => setSelectedTab("Summary")
+        },
+        {
+            key: 'GenAISummary',
+            text: 'GenAISummary',
+            onClick: () => setSelectedTab("GenAISummary")
         }
       ];
 
@@ -87,7 +93,9 @@ const Layout = () => {
         </header>
         {/* <Outlet /> */}
         
-        {selectedTab == "Chat" ? <Chat/>:<Summary/>}
+        {selectedTab == "Chat" && <Chat/>}
+        {selectedTab == "GenAISummary" && <GenAISummary/>}
+        {selectedTab == "Summary" && <Summary/>}
       </div>
     );
 };

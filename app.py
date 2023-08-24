@@ -199,29 +199,26 @@ def stream_without_data(response):
 
 def summarize_data(request):
     openai.api_type = "azure"
-    openai.api_base = "https://qakxazopenai.openai.azure.com/"
+    openai.api_base = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
     openai.api_version = "2022-12-01"
-    openai.api_key = "ff829476f88246c1accdad3826cc3fea"
-    response = openai.ChatCompletion.create(
-        engine=AZURE_OPENAI_MODEL,
-        messages = request,
-        temperature=float(AZURE_OPENAI_TEMPERATURE),
-        max_tokens=int(AZURE_OPENAI_MAX_TOKENS),
-        top_p=float(AZURE_OPENAI_TOP_P),
-        stop= None
-    )
+    openai.api_key = AZURE_OPENAI_KEY
+    response = openai.Completion.create(
+        engine="gpt35_1",
+        prompt="Provide a summary of the text below that captures its main idea. \n\n"+request,
+        temperature=0,
+        max_tokens=250,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
+        stop=None)
+    print(response)
     response_obj = {
             "id": response.id,
             "object": response.object,
             "created": response.created,
             "model": response.model,
-            "choices": [{
-                "messages": [
-                     {"role": "system", "content": "You are a helpful assistant. Summarize the following text in 60 words or less."},
-                     {"role": "user", "content": response.choices[0].text}
-                ]
-            }]
-        }
+            "content": response.choices[0].text}
+    print(response_obj)
     return jsonify(response_obj), 200
 
 def conversation_without_data(request):
@@ -291,11 +288,12 @@ def conversation():
 def summarize():
     try:
         print ("inside summari api")
-        print(request.json)
-        summarize_data(request.json)
+        # print(request.json["text"])
+        result = summarize_data(request.json["text"])
+        return result
     except Exception as e:
         logging.exception("Exception in /conversation1")
-        return jsonify({"error": str(e)}), 500  
+        return jsonify({"error": str(e)}), 500 
 
 
 @app.route("/langsummarize", methods=["GET","POST"])
