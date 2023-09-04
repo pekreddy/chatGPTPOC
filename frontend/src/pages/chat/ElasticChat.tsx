@@ -13,20 +13,16 @@ import {
     ChatMessage,
     ConversationRequest,
     conversationApi,
+    conversationElasticApi,
     Citation,
     ToolMessageContent,
     ChatResponse,
-    getUserInfo,
-    chatApi,
-    ChatRequest,
-    ChatTurn,
-    RetrievalMode,
-    Approaches
+    getUserInfo
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 
-const Chat = () => {
+const ElasticChat = () => {
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -37,15 +33,6 @@ const Chat = () => {
     const abortFuncs = useRef([] as AbortController[]);
     const [showAuthMessage, setShowAuthMessage] = useState<boolean>(true);
     
-    const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
-    const [promptTemplate, setPromptTemplate] = useState<string>("");
-    const [retrieveCount, setRetrieveCount] = useState<number>(3);
-    const [retrievalMode, setRetrievalMode] = useState<RetrievalMode>(RetrievalMode.Hybrid);
-    const [useSemanticRanker, setUseSemanticRanker] = useState<boolean>(true);
-    const [useSemanticCaptions, setUseSemanticCaptions] = useState<boolean>(false);
-    const [excludeCategory, setExcludeCategory] = useState<string>("");
-    const [useSuggestFollowupQuestions, setUseSuggestFollowupQuestions] = useState<boolean>(false);
-
     const getUserInfoList = () => {
       //  const userInfoList = await getUserInfo();
        // if (userInfoList.length === 0 && window.location.hostname !== "127.0.0.1") {
@@ -70,28 +57,13 @@ const Chat = () => {
             content: question
         };
 
-        /*const request: ConversationRequest = {
+        const request: ConversationRequest = {
             messages: [...answers.filter((answer) => answer.role !== "error"), userMessage]
-        };*/
-
-        const history: ChatTurn[] = answers.map(a => ({ user: a[0], bot: a[1].answer }));
-        const request: ChatRequest = {
-            history: [...history, { user: question, bot: undefined }],
-            approach: Approaches.ReadRetrieveRead,
-            overrides: {
-                promptTemplate: promptTemplate.length === 0 ? undefined : promptTemplate,
-                excludeCategory: excludeCategory.length === 0 ? undefined : excludeCategory,
-                top: retrieveCount,
-                retrievalMode: retrievalMode,
-                semanticRanker: useSemanticRanker,
-                semanticCaptions: useSemanticCaptions,
-                suggestFollowupQuestions: useSuggestFollowupQuestions
-                }
-            };
+        };
 
         let result = {} as ChatResponse;
         try {
-            const response = await chatApi(request);
+            const response = await conversationElasticApi(request, abortController.signal);
             if (response?.body) {
                 
                 const reader = response.body.getReader();
@@ -203,7 +175,7 @@ const Chat = () => {
                                     className={styles.chatIcon}
                                     aria-hidden="true"
                                 />
-                                <h6 className={styles.chatEmptyStateTitle}>Start a conversation with KX.</h6>
+                                <h6 className={styles.chatEmptyStateTitle}>Start a conversation with KX Elastic.</h6>
                             </Stack>
                         ) : (
                             <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? "40px" : "0px"}} role="log">
@@ -314,4 +286,4 @@ const Chat = () => {
     );
 };
 
-export default Chat;
+export default ElasticChat;

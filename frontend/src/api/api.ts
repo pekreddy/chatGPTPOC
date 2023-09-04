@@ -1,7 +1,22 @@
-import { UserInfo, ConversationRequest, SummaryRequest} from "./models";
+import { UserInfo, ConversationRequest, SummaryRequest, AskRequest, AskResponse, ChatRequest} from "./models";
 
 export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
     const response = await fetch("/conversation1", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            messages: options.messages
+        }),
+        signal: abortSignal
+    });
+
+    return response;
+}
+
+export async function conversationElasticApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
+    const response = await fetch("/conversationElastic", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -50,4 +65,36 @@ export async function getUserInfo(): Promise<UserInfo[]> {
 
     const payload = await response.json();
     return payload;
+}
+
+export async function chatApi(options: ChatRequest): Promise<AskResponse> {
+    const response = await fetch("/chat", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            history: options.history,
+            approach: options.approach,
+            overrides: {
+                retrieval_mode: options.overrides?.retrievalMode,
+                semantic_ranker: options.overrides?.semanticRanker,
+                semantic_captions: options.overrides?.semanticCaptions,
+                top: options.overrides?.top,
+                temperature: options.overrides?.temperature,
+                prompt_template: options.overrides?.promptTemplate,
+                prompt_template_prefix: options.overrides?.promptTemplatePrefix,
+                prompt_template_suffix: options.overrides?.promptTemplateSuffix,
+                exclude_category: options.overrides?.excludeCategory,
+                suggest_followup_questions: options.overrides?.suggestFollowupQuestions
+            }
+        })
+    });
+
+    const parsedResponse: AskResponse = await response.json();
+    if (response.status > 299 || !response.ok) {
+        throw Error(parsedResponse.error || "Unknown error");
+    }
+
+    return parsedResponse;
 }
