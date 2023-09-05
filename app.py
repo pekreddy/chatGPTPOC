@@ -7,6 +7,8 @@ import requests
 import openai
 from flask import Flask, Response, request, jsonify, send_from_directory
 from dotenv import load_dotenv
+from elasticsearch import Elasticsearch
+from azure.core.credentials import AzureKeyCredential
 import app
 
 load_dotenv()
@@ -59,6 +61,13 @@ AZURE_LANGUAGE_KEY = os.environ.get("AZURE_LANGUAGE_KEY")
 
 SHOULD_STREAM = True if AZURE_OPENAI_STREAM.lower() == "true" else False
 
+messages = [
+        {
+            "role": "system",
+            "content": AZURE_OPENAI_SYSTEM_MESSAGE
+        }
+    ]
+
 def is_chat_model():
     if 'gpt-4' in AZURE_OPENAI_MODEL_NAME.lower() or AZURE_OPENAI_MODEL_NAME.lower() in ['gpt-35-turbo-4k', 'gpt-35-turbo-16k']:
         return True
@@ -68,6 +77,27 @@ def should_use_data():
     if AZURE_SEARCH_SERVICE and AZURE_SEARCH_INDEX and AZURE_SEARCH_KEY:
         return True
     return False
+
+def should_use_data_elastic(request):
+    request_messages = request.json["messages"]
+    length=len(request_messages)
+    question=request_messages[length-1]['content']
+    es = Elasticsearch('http://localhost:9200')
+    inputtext = question
+    resp = es.search(index="kxgenaiindex",size=1, query={"multi_match" : {
+            "query" : "{}".format(inputtext),
+            "fields": ["attachmenttext1"]
+        }})
+    output = ""
+    #print("Got %d Hits:" % resp['hits']['total']['value'])
+    for hit in resp['hits']['hits']:
+        #print("%(id)s %(attachmenttext1)s: %(documentid)s" % hit["_source"])
+        output = "%(attachmenttext1)s" % hit["_source"]
+        #print("%(id)s %(attachmenttext1)s" % hit["_source"])
+    if output=="":
+        return False
+    else:
+        return True
 
 def prepare_body_headers_with_data(request):
     request_messages = request.json["messages"]
@@ -159,6 +189,27 @@ def stream_with_data(body, headers, endpoint):
     except Exception as e:
         yield json.dumps({"error": str(e)}).replace("\n", "\\n") + "\n"
 
+def stream_without_data(response):
+    responseText = ""
+    for line in response:
+        deltaText = line["choices"][0]["delta"].get('content')
+        if deltaText and deltaText != "[DONE]":
+            responseText += deltaText
+
+        response_obj = {
+            "id": line["id"],
+            "model": line["model"],
+            "created": line["created"],
+            "object": line["object"],
+            "choices": [{
+                "messages": [{
+                    "role": "assistant",
+                    "content": responseText
+                }]
+            }]
+        }
+        yield json.dumps(response_obj).replace("\n", "\\n") + "\n"
+
 
 def conversation_with_data(request):
     body, headers = prepare_body_headers_with_data(request)
@@ -175,8 +226,42 @@ def conversation_with_data(request):
             return Response(stream_with_data(body, headers, endpoint), mimetype='text/event-stream')
         else:
             return Response(None, mimetype='text/event-stream')
+                
 
-def stream_without_data(response):
+def data_from_elastic(test):
+    es = Elasticsearch('http://localhost:9200')
+    inputtext = test
+    resp = es.search(index="kxgenaiindex",size=1, query={"multi_match" : {
+            "query" : "{}".format(inputtext),
+            "fields": ["attachmenttext1"]
+        }})
+    output = ""
+    #print("Got %d Hits:" % resp['hits']['total']['value'])
+    for hit in resp['hits']['hits']:
+        #print("%(id)s %(attachmenttext1)s: %(documentid)s" % hit["_source"])
+        output = "%(attachmenttext1)s" % hit["_source"]
+        #print("%(id)s %(attachmenttext1)s" % hit["_source"])
+    return output
+
+def stream_with_data_elastic(response,question):
+    responseText=data_from_elastic(question)
+    for line in response:
+        response_obj = {
+            "id": line["id"],
+            "model": line["model"],
+            "created": line["created"],
+            "object": line["object"],
+            "choices": [{
+                "messages": [{
+                    "role": "assistant",
+                    "content": responseText
+                }]
+            }]
+        }
+        yield json.dumps(response_obj).replace("\n", "\\n") + "\n"
+
+
+def stream_without_data_elastic(response):
     responseText = ""
     for line in response:
         deltaText = line["choices"][0]["delta"].get('content')
@@ -221,19 +306,13 @@ def summarize_data(request):
     print(response_obj)
     return jsonify(response_obj), 200
 
+
 def conversation_without_data(request):
     openai.api_type = "azure"
     openai.api_base = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
     openai.api_version = "2023-03-15-preview"
     openai.api_key = AZURE_OPENAI_KEY
-
     request_messages = request.json["messages"]
-    messages = [
-        {
-            "role": "system",
-            "content": AZURE_OPENAI_SYSTEM_MESSAGE
-        }
-    ]
 
     for message in request_messages:
         messages.append({
@@ -264,13 +343,107 @@ def conversation_without_data(request):
                 }]
             }]
         }
-
         return jsonify(response_obj), 200
     else:
         if request.method == "POST":
             return Response(stream_without_data(response), mimetype='text/event-stream')
         else:
             return Response(None, mimetype='text/event-stream')
+
+def conversation_without_data_elastic(request):
+    openai.api_type = "azure"
+    openai.api_base = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
+    openai.api_version = "2023-03-15-preview"
+    openai.api_key = AZURE_OPENAI_KEY
+
+    request_messages = request.json["messages"]
+    messages = [
+        {
+            "role": "system",
+            "content": AZURE_OPENAI_SYSTEM_MESSAGE
+        }
+    ]
+
+    for message in request_messages:
+        messages.append({
+            "role": message["role"] ,
+            "content": message["content"]
+        })
+    print(messages)
+    response = openai.ChatCompletion.create(
+        engine=AZURE_OPENAI_MODEL,
+        messages = messages,
+        temperature=float(AZURE_OPENAI_TEMPERATURE),
+        max_tokens=int(AZURE_OPENAI_MAX_TOKENS),
+        top_p=float(AZURE_OPENAI_TOP_P),
+        stop=AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else None,
+        stream=SHOULD_STREAM
+    )
+    if not SHOULD_STREAM:
+        response_obj = {
+            "id": response,
+            "model": response.model,
+            "created": response.created,
+            "object": response.object,
+            "choices": [{
+                "messages": [{
+                    "role": "assistant",
+                    "content": response.choices[0].message.content
+                }]
+            }]
+        }
+
+        return jsonify(response_obj), 200
+    else:
+        if request.method == "POST":
+            return Response(stream_without_data_elastic(response), mimetype='text/event-stream')
+        else:
+            return Response(None, mimetype='text/event-stream')
+        
+def conversation_with_data_elastic(request):
+    openai.api_type = "azure"
+    openai.api_base = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
+    openai.api_version = "2023-03-15-preview"
+    openai.api_key = AZURE_OPENAI_KEY
+    request_messages = request.json["messages"]
+    length=len(request_messages)
+    question=request_messages[length-1]['content']
+ 
+    for message in request_messages:
+        messages.append({
+            "role": message["role"] ,
+            "content": message["content"]
+        })
+    print(messages)
+    response = openai.ChatCompletion.create(
+        engine=AZURE_OPENAI_MODEL,
+        messages = messages,
+        temperature=float(AZURE_OPENAI_TEMPERATURE),
+        max_tokens=int(AZURE_OPENAI_MAX_TOKENS),
+        top_p=float(AZURE_OPENAI_TOP_P),
+        stop=AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else None,
+        stream=SHOULD_STREAM
+    )
+    if not SHOULD_STREAM:
+        response_obj = {
+            "id": response,
+            "model": response.model,
+            "created": response.created,
+            "object": response.object,
+            "choices": [{
+                "messages": [{
+                    "role": "assistant",
+                    "content": response.choices[0].message.content
+                }]
+            }]
+        }
+        return jsonify(response_obj), 200
+    else:
+        if request.method == "POST":
+            return Response(stream_with_data_elastic(response,question), mimetype='text/event-stream')
+        else:
+            return Response(None, mimetype='text/event-stream')
+                
 
 @app.route("/conversation1", methods=["GET", "POST"])
 def conversation():
@@ -283,11 +456,23 @@ def conversation():
     except Exception as e:
         logging.exception("Exception in /conversation1")
         return jsonify({"error": str(e)}), 500
+    
+@app.route("/conversationwithelastic", methods=["GET", "POST"])
+def conversationwithelastic():
+    try:
+        use_data = should_use_data_elastic(request)
+        if use_data:
+            return conversation_with_data_elastic(request)
+        else:
+            return conversation_without_data_elastic(request)
+    except Exception as e:
+        logging.exception("Exception in /conversation")
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/summarize", methods=["POST"])
 def summarize():
     try:
-        print ("inside summari api")
+        print ("inside summari api")                                        
         # print(request.json["text"])
         result = summarize_data(request.json["text"])
         return result

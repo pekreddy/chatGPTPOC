@@ -15,6 +15,21 @@ export async function conversationApi(options: ConversationRequest, abortSignal:
     return response;
 }
 
+export async function conversationApiElastic(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
+    const response = await fetch("/conversationwithelastic", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            messages: options.messages
+        }),
+        signal: abortSignal
+    });
+
+    return response;
+}
+
 export async function summaryApi(text: any): Promise<Response> {
     var myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");

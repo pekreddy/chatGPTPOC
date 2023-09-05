@@ -16,7 +16,8 @@ import {
     Citation,
     ToolMessageContent,
     ChatResponse,
-    getUserInfo
+    getUserInfo,
+    conversationApiElastic
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -62,7 +63,7 @@ const Chat = () => {
 
         let result = {} as ChatResponse;
         try {
-            const response = await conversationApi(request, abortController.signal);
+            const response = await conversationApiElastic(request, abortController.signal);
             if (response?.body) {
                 
                 const reader = response.body.getReader();
