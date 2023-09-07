@@ -51,6 +51,7 @@ AZURE_OPENAI_TOP_P = os.environ.get("AZURE_OPENAI_TOP_P", 1.0)
 AZURE_OPENAI_MAX_TOKENS =os.environ.get("AZURE_OPENAI_MAX_TOKENS", 1000)
 AZURE_OPENAI_STOP_SEQUENCE =os.environ.get("AZURE_OPENAI_STOP_SEQUENCE")
 AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE", "You are an AI assistant that helps people find information.")
+AZURE_OPENAI_SYSTEM_MESSAGE_ELASTIC = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE_ELASTIC", "You are an AI assistant that helps to summarize the given knowledge information into a meaningful message.")
 AZURE_OPENAI_PREVIEW_API_VERSION =os.environ.get("AZURE_OPENAI_PREVIEW_API_VERSION", "2023-06-01-preview")
 AZURE_OPENAI_STREAM =os.environ.get("AZURE_OPENAI_STREAM", "true")
 AZURE_OPENAI_MODEL_NAME =os.environ.get("AZURE_OPENAI_MODEL_NAME", "gpt-35-turbo") # Name of the model, e.g. 'gpt-35-turbo' or 'gpt-4'
@@ -64,7 +65,7 @@ SHOULD_STREAM = True if AZURE_OPENAI_STREAM.lower() == "true" else False
 messages = [
         {
             "role": "system",
-            "content": AZURE_OPENAI_SYSTEM_MESSAGE
+            "content": AZURE_OPENAI_SYSTEM_MESSAGE_ELASTIC
         }
     ]
 
@@ -355,12 +356,12 @@ def conversation_without_data_elastic(request):
     openai.api_base = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
     openai.api_version = "2023-03-15-preview"
     openai.api_key = AZURE_OPENAI_KEY
-
     request_messages = request.json["messages"]
+
     messages = [
         {
             "role": "system",
-            "content": AZURE_OPENAI_SYSTEM_MESSAGE
+            "content": AZURE_OPENAI_SYSTEM_MESSAGE_ELASTIC
         }
     ]
 
@@ -369,7 +370,7 @@ def conversation_without_data_elastic(request):
             "role": message["role"] ,
             "content": message["content"]
         })
-    print(messages)
+        print(messages)
     response = openai.ChatCompletion.create(
         engine=AZURE_OPENAI_MODEL,
         messages = messages,
@@ -406,18 +407,34 @@ def conversation_with_data_elastic(request):
     openai.api_version = "2023-03-15-preview"
     openai.api_key = AZURE_OPENAI_KEY
     request_messages = request.json["messages"]
+
     length=len(request_messages)
     question=request_messages[length-1]['content']
- 
+    answer=data_from_elastic(question)
+    
+    messages = [
+        {
+            "role": "system",
+            "content": AZURE_OPENAI_SYSTEM_MESSAGE_ELASTIC
+        }
+    ]
     for message in request_messages:
         messages.append({
             "role": message["role"] ,
             "content": message["content"]
         })
+
+    for message in request_messages:
+        messagesopenai = [
+        {
+            "role": message["role"],
+            "content": answer
+        }
+    ]
     print(messages)
     response = openai.ChatCompletion.create(
         engine=AZURE_OPENAI_MODEL,
-        messages = messages,
+        messages = messagesopenai,
         temperature=float(AZURE_OPENAI_TEMPERATURE),
         max_tokens=int(AZURE_OPENAI_MAX_TOKENS),
         top_p=float(AZURE_OPENAI_TOP_P),
@@ -440,7 +457,7 @@ def conversation_with_data_elastic(request):
         return jsonify(response_obj), 200
     else:
         if request.method == "POST":
-            return Response(stream_with_data_elastic(response,question), mimetype='text/event-stream')
+            return Response(stream_without_data_elastic(response), mimetype='text/event-stream')
         else:
             return Response(None, mimetype='text/event-stream')
                 
