@@ -268,6 +268,7 @@ def conversation_without_data(request):
         return jsonify(response_obj), 200
     else:
         if request.method == "POST":
+            print("test")
             return Response(stream_without_data(response), mimetype='text/event-stream')
         else:
             return Response(None, mimetype='text/event-stream')
