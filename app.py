@@ -50,6 +50,8 @@ AZURE_OPENAI_TEMPERATURE = os.environ.get("AZURE_OPENAI_TEMPERATURE", 0)
 AZURE_OPENAI_TOP_P = os.environ.get("AZURE_OPENAI_TOP_P", 1.0)
 AZURE_OPENAI_MAX_TOKENS =os.environ.get("AZURE_OPENAI_MAX_TOKENS", 1000)
 AZURE_OPENAI_STOP_SEQUENCE =os.environ.get("AZURE_OPENAI_STOP_SEQUENCE")
+AZURE_INITIAL_QUERY_PROMPT =os.environ.get("AZURE_INITIAL_QUERY_PROMPT")
+AZURE_OPENAI_SYSTEM_MESSAGE_DECISION=os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE_DECISION")
 AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE", "You are an AI assistant that helps people find information.")
 AZURE_OPENAI_SYSTEM_MESSAGE_ELASTIC = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE_ELASTIC", "You are an AI assistant that helps to summarize the given knowledge information into a meaningful message.")
 AZURE_OPENAI_PREVIEW_API_VERSION =os.environ.get("AZURE_OPENAI_PREVIEW_API_VERSION", "2023-06-01-preview")
@@ -65,8 +67,13 @@ SHOULD_STREAM = True if AZURE_OPENAI_STREAM.lower() == "true" else False
 messages = [
         {
             "role": "system",
-            "content": AZURE_OPENAI_SYSTEM_MESSAGE_ELASTIC
+            "content": AZURE_OPENAI_SYSTEM_MESSAGE_DECISION
         }
+    ]
+
+query_prompt_few_shots = [
+        {'role' : "user", 'content' : 'What is data twin?' },
+        {'role' : "assistant", 'content' : 'tell about well being' }
     ]
 
 def is_chat_model():
@@ -263,12 +270,14 @@ def stream_with_data_elastic(response,question):
 
 
 def stream_without_data_elastic(response):
+    print("entering function stream_without_data_elastic")
     responseText = ""
+    print(response)
     for line in response:
+        print("inside for")
         deltaText = line["choices"][0]["delta"].get('content')
         if deltaText and deltaText != "[DONE]":
             responseText += deltaText
-
         response_obj = {
             "id": line["id"],
             "model": line["model"],
@@ -361,7 +370,7 @@ def conversation_without_data_elastic(request):
     messages = [
         {
             "role": "system",
-            "content": AZURE_OPENAI_SYSTEM_MESSAGE_ELASTIC
+            "content": AZURE_OPENAI_SYSTEM_MESSAGE_DECISION
         }
     ]
 
@@ -415,32 +424,49 @@ def conversation_with_data_elastic(request):
     messages = [
         {
             "role": "system",
-            "content": AZURE_OPENAI_SYSTEM_MESSAGE_ELASTIC
-        }
+            "content": AZURE_INITIAL_QUERY_PROMPT
+        },
+        {
+            "role": "user",
+            "content": "What is NLP"
+        },
+                {
+            "role": "assistant",
+            "content": "Present"
+        },
+                {
+            "role": "user",
+            "content": "how is weather today"
+        },
+                {
+            "role": "assistant",
+            "content": "Sorry, i cannot provide this information"
+        },
     ]
     for message in request_messages:
         messages.append({
             "role": message["role"] ,
             "content": message["content"]
         })
-
-    for message in request_messages:
-        messagesopenai = [
-        {
-            "role": message["role"],
-            "content": answer
-        }
-    ]
-    print(messages)
+    
     response = openai.ChatCompletion.create(
-        engine=AZURE_OPENAI_MODEL,
-        messages = messagesopenai,
-        temperature=float(AZURE_OPENAI_TEMPERATURE),
-        max_tokens=int(AZURE_OPENAI_MAX_TOKENS),
-        top_p=float(AZURE_OPENAI_TOP_P),
-        stop=AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else None,
-        stream=SHOULD_STREAM
-    )
+            engine=AZURE_OPENAI_MODEL,
+            messages=messages,
+            temperature=float(AZURE_OPENAI_TEMPERATURE),
+            max_tokens=int(AZURE_OPENAI_MAX_TOKENS),
+            top_p=float(AZURE_OPENAI_TOP_P),
+            stop=AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else None,
+            stream=SHOULD_STREAM,
+            )
+
+    # responseText = ""
+    # for line in response:
+    #     deltaText = line["choices"][0]["delta"].get('content')
+    #     if deltaText and deltaText != "[DONE]":
+    #         responseText += deltaText
+
+    # print("chat_content--------",responseText)
+
     if not SHOULD_STREAM:
         response_obj = {
             "id": response,
@@ -462,6 +488,47 @@ def conversation_with_data_elastic(request):
             return Response(None, mimetype='text/event-stream')
                 
 
+    # for message in request_messages:
+    #     messagesopenai = [
+    #     {
+    #         "role": message["role"],
+    #         "content": answer
+    #     }
+    # ]
+    # print(messages)
+    
+    # response = openai.ChatCompletion.create(
+    #        engine=AZURE_OPENAI_MODEL,
+    #        messages = messagesopenai,
+    #        temperature=float(AZURE_OPENAI_TEMPERATURE),
+    #        max_tokens=int(AZURE_OPENAI_MAX_TOKENS),
+    #        top_p=float(AZURE_OPENAI_TOP_P),
+    #        stop=AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else None,
+    #        stream=SHOULD_STREAM
+    #     )
+
+        
+    # if not SHOULD_STREAM:
+    #     response_obj = {
+    #         "id": response,
+    #         "model": response.model,
+    #         "created": response.created,
+    #         "object": response.object,
+    #         "choices": [{
+    #             "messages": [{
+    #                 "role": "assistant",
+    #                 "content": response.choices[0].message.content
+    #             }]
+    #         }]
+    #     }
+    #     return jsonify(response_obj), 200
+    # else:
+    #     if request.method == "POST":
+    #         return Response(stream_without_data_elastic(response), mimetype='text/event-stream')
+    #     else:
+    #         return Response(None, mimetype='text/event-stream')
+                
+
 @app.route("/conversation1", methods=["GET", "POST"])
 def conversation():
     try:
@@ -477,11 +544,12 @@ def conversation():
 @app.route("/conversationwithelastic", methods=["GET", "POST"])
 def conversationwithelastic():
     try:
-        use_data = should_use_data_elastic(request)
-        if use_data:
-            return conversation_with_data_elastic(request)
-        else:
-            return conversation_without_data_elastic(request)
+        # use_data = should_use_data_elastic(request)
+        # if use_data:
+        #     return conversation_with_data_elastic(request)
+        # else:
+        #     return conversation_without_data_elastic(request)
+        return conversation_with_data_elastic(request)
     except Exception as e:
         logging.exception("Exception in /conversation")
         return jsonify({"error": str(e)}), 500
