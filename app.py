@@ -71,11 +71,6 @@ messages = [
         }
     ]
 
-query_prompt_few_shots = [
-        {'role' : "user", 'content' : 'What is data twin?' },
-        {'role' : "assistant", 'content' : 'tell about well being' }
-    ]
-
 def is_chat_model():
     if 'gpt-4' in AZURE_OPENAI_MODEL_NAME.lower() or AZURE_OPENAI_MODEL_NAME.lower() in ['gpt-35-turbo-4k', 'gpt-35-turbo-16k']:
         return True
@@ -270,14 +265,12 @@ def stream_with_data_elastic(response,question):
 
 
 def stream_without_data_elastic(response):
-    print("entering function stream_without_data_elastic")
     responseText = ""
-    print(response)
     for line in response:
-        print("inside for")
         deltaText = line["choices"][0]["delta"].get('content')
         if deltaText and deltaText != "[DONE]":
             responseText += deltaText
+
         response_obj = {
             "id": line["id"],
             "model": line["model"],
@@ -458,15 +451,7 @@ def conversation_with_data_elastic(request):
             stop=AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else None,
             stream=SHOULD_STREAM,
             )
-
-    # responseText = ""
-    # for line in response:
-    #     deltaText = line["choices"][0]["delta"].get('content')
-    #     if deltaText and deltaText != "[DONE]":
-    #         responseText += deltaText
-
-    # print("chat_content--------",responseText)
-
+    
     if not SHOULD_STREAM:
         response_obj = {
             "id": response,
