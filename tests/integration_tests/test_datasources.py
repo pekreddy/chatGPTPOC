@@ -137,7 +137,7 @@ async def test_dotenv(test_app: Quart, dotenv_template_params: dict[str, str]):
     else:
         message_content = "What is Contoso?"
         
-    request_path = "/conversation"
+    request_path = "/genaiparkcall"
     request_data = {
         "messages": [
             {

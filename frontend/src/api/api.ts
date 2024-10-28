@@ -3,7 +3,7 @@ import { chatHistorySampleData } from '../constants/chatHistory'
 import { ChatMessage, Conversation, ConversationRequest, CosmosDBHealth, CosmosDBStatus, UserInfo } from './models'
 
 export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
-  const response = await fetch('/conversation', {
+  const response = await fetch('/genaiparkcall', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'

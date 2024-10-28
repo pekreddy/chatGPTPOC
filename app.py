@@ -404,7 +404,7 @@ async def conversation_internal(request_body, request_headers):
             return jsonify({"error": str(ex)}), 500
 
 
-@bp.route("/conversation", methods=["POST"])
+@bp.route("/genaiparkcall", methods=["POST"])
 async def conversation():
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
