@@ -337,25 +337,35 @@ async def promptflow_request(request):
 
 async def send_chat_request(request_body, request_headers):
     filtered_messages = []
-    messages = request_body.get("messages", [])
-    for message in messages:
+    #messages = request_body.get("message", [])
+    new_messages = extract_messages_from_request(request_body)
+    for message in new_messages:
         if message.get("role") != 'tool':
             filtered_messages.append(message)
-            
-    request_body['messages'] = filtered_messages
-    model_args = prepare_model_args(request_body, request_headers)
-
+    new_request_body = {"messages": []}        
+    new_request_body['messages'] = filtered_messages
+    model_args = prepare_model_args(new_request_body, request_headers)
+  
     try:
         azure_openai_client = await init_openai_client()
         raw_response = await azure_openai_client.chat.completions.with_raw_response.create(**model_args)
         response = raw_response.parse()
         apim_request_id = raw_response.headers.get("apim-request-id") 
     except Exception as e:
-        logging.exception("Exception in send_chat_request")
+        logging.exception("Exception in send_chat_request ")
         raise e
 
     return response, apim_request_id
+#write a function to read json request body and extract the message section from it and build a new messages list with role as user and Text as the content
+#pass this messages list to the send_chat_request function
+def extract_messages_from_request(request_body):
+    messages = request_body.get("message", [])
+    #create a new json list of messages with role as user and content as the message[1] and final format should be like {"messages": [{ "role": "user", "content": "hi"}]}
+    print( messages['value'])
+    messages_new = [{"role": "user", "content": messages['value']}]
+    return messages_new
 
+######################
 
 async def complete_chat_request(request_body, request_headers):
     if app_settings.base_settings.use_promptflow:
