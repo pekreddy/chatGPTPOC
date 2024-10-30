@@ -106,7 +106,7 @@ def format_non_streaming_response(chatCompletion, history_metadata, apim_request
             )
             Answer=message.content
             new_response= Answer+' **Citations** '+citation
-            return new_response
+            return Answer
             #return response_obj
 
     return {}
