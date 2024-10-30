@@ -85,7 +85,8 @@ def format_non_streaming_response(chatCompletion, history_metadata, apim_request
         "history_metadata": history_metadata,
         "apim-request-id": apim_request_id,
     }
-
+    citation =''
+    Answer = ''
     if len(chatCompletion.choices) > 0:
         message = chatCompletion.choices[0].message
         if message:
@@ -96,13 +97,17 @@ def format_non_streaming_response(chatCompletion, history_metadata, apim_request
                         "content": json.dumps(message.context),
                     }
                 )
+                citation=message.context['citations'][0]['content']
             response_obj["choices"][0]["messages"].append(
                 {
                     "role": "assistant",
                     "content": message.content,
                 }
             )
-            return response_obj
+            Answer=message.content
+            new_response= Answer+' **Citations** '+citation
+            return new_response
+            #return response_obj
 
     return {}
 
